@@ -53,6 +53,11 @@ that server can list, read and set graphic EQs and group EQs. It can change the 
 so only enter the address of software you trust to ask first. The commands are described
 in `docs/EQ-AGENT.md` in the module's repository.
 
+The agent can also ask what the EQs are capable of (bands, ranges). Two things the console
+does not report are worth filling in for it: the frequency of graphic EQ band 1 (16 or
+20 Hz; look at the console's graphic) and what the EQ curve numbers 1 to 4 mean, entered as
+`1=bell, 2=low shelf` and so on.
+
 ### Web page
 
 Linked from the settings page: `/instance/<connection label>/` on Companion's address.

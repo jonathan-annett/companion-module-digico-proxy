@@ -138,3 +138,23 @@ default rate is below the proxy's, so alone it is not slowed.
   Companion's store, the web page checks this repository's GitHub releases from the
   browser and offers the newest package. `src/update.js` is the same file in both, apart
   from the repository name. To be removed when the module is accepted into the store.
+
+### 2026-11-17: EQ limits and characteristics for the agent, 0.1.3
+
+- The maintainer asked whether the agent could ask for the precise limits and
+  characteristics of an EQ or graphic EQ: maximum gain, Q range, frequency range, which
+  shapes exist.
+- `geq.info` and `group.eq.info` answer from two sources. The shape of the EQ on this
+  console (how many bands, pre-insert switch, bus filters) is read from the console. The
+  numeric ranges are constants taken from DiGiCo's command sets, which agree across
+  Quantum 338, SD5/7/10 and SD8/9/11/12; they are the same constants a `set` enforces, so
+  what is reported and what is accepted cannot differ.
+- Two things are in neither source: the graphic's band frequencies, and what the four
+  curve numbers mean. Rather than guess, both are settings, and the info commands carry
+  a flag saying whether they are known. An agent tuning by frequency must not be handed
+  an invented frequency table.
+- For the graphic, the user only says where band 1 is (16 or 20 Hz); the rest follows as
+  ISO third-octave centres. If a console's graphic turns out not to be third-octave, this
+  is wrong and will need a full list instead.
+- Once the maintainer has read the real values off a console (P14), they can become the
+  defaults and the settings can go.

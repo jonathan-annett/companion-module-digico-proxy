@@ -33,7 +33,17 @@ On connecting the proxy sends:
 	"version": 1,
 	"console": "Quantum338",
 	"consoleOnline": true,
-	"commands": ["ping", "geq.list", "geq.get", "geq.set", "group.list", "group.eq.get", "group.eq.set"]
+	"commands": [
+		"ping",
+		"geq.list",
+		"geq.info",
+		"geq.get",
+		"geq.set",
+		"group.list",
+		"group.eq.info",
+		"group.eq.get",
+		"group.eq.set"
+	]
 }
 ```
 
@@ -50,17 +60,77 @@ in the order they arrive, so a `set` followed by a `get` reads the result of the
 
 ## Commands
 
-| Command        | Parameters       | Result                              |
-| -------------- | ---------------- | ----------------------------------- |
-| `ping`         |                  | `{ console, consoleOnline }`        |
-| `geq.list`     |                  | `{ graphicEqs: [{ index, name }] }` |
-| `geq.get`      | `index`          | a graphic EQ state                  |
-| `geq.set`      | `index`, `state` | `{ state, sent, notApplied? }`      |
-| `group.list`   |                  | `{ groups: [{ index, name }] }`     |
-| `group.eq.get` | `index`          | a group EQ state                    |
-| `group.eq.set` | `index`, `state` | `{ state, sent, notApplied? }`      |
+| Command         | Parameters                    | Result                                                     |
+| --------------- | ----------------------------- | ---------------------------------------------------------- |
+| `ping`          |                               | `{ console, consoleOnline }`                               |
+| `geq.list`      |                               | `{ graphicEqs: [{ index, name }] }`                        |
+| `geq.info`      |                               | limits and characteristics of a graphic EQ                 |
+| `geq.get`       | `index`                       | a graphic EQ state                                         |
+| `geq.set`       | `index`, `state`              | `{ state, sent, notApplied? }`                             |
+| `group.list`    |                               | `{ groups: [{ index, name }] }`                            |
+| `group.eq.info` | `index` (optional, default 1) | limits and characteristics of a group's EQ on this console |
+| `group.eq.get`  | `index`                       | a group EQ state                                           |
+| `group.eq.set`  | `index`, `state`              | `{ state, sent, notApplied? }`                             |
 
 `index` counts from 1, as on the console.
+
+### Limits and characteristics
+
+Ask these once after connecting, before working out a change.
+
+`geq.info`:
+
+```json
+{
+	"bands": 32,
+	"gain": { "min": -12, "max": 12, "unit": "dB" },
+	"trim": { "min": -18, "max": 18, "unit": "dB" },
+	"spacing": "third octave",
+	"frequencies": [20, 25, 31.5, 40, "... 32 in all ...", 25000],
+	"frequenciesKnown": true,
+	"source": "..."
+}
+```
+
+`group.eq.info`:
+
+```json
+{
+	"bands": [
+		{
+			"band": 1,
+			"freq": { "min": 20, "max": 20000, "unit": "Hz" },
+			"gain": { "min": -18, "max": 18, "unit": "dB" },
+			"q": { "min": 0.1, "max": 20, "unit": "Q" },
+			"curve": { "min": 1, "max": 4 }
+		}
+	],
+	"curveNames": { "1": "bell", "2": "low shelf", "3": "high shelf", "4": "notch" },
+	"curveNamesKnown": true,
+	"preInsertSwitch": true,
+	"filters": null,
+	"notExposed": ["dynamic EQ settings of bands 1 to 4", "symmetric Q switch"],
+	"source": "..."
+}
+```
+
+- `bands` has one entry per band the console has (eight or four).
+- The number of bands, the pre-insert switch and the filters are read from the console,
+  so they are right for whichever console is connected. `filters` is `null` on consoles
+  whose groups have none, and otherwise gives the range of each filter's frequency.
+- The ranges are the ones in DiGiCo's command sets, and are the ones a `set` enforces.
+- **Two things the console does not report**, so the proxy cannot know them unaided:
+  - _Where the graphic EQ's bands are._ Set "frequency of graphic EQ band 1" in the
+    proxy's settings to 16 Hz or 20 Hz (look at the console). `frequencies` is then the
+    32 ISO third-octave centres from there. Until then it is `null` and
+    `frequenciesKnown` is `false`.
+  - _What the curve numbers mean._ Enter them in the settings, for example
+    `1=bell, 2=low shelf, 3=high shelf, 4=notch`. That example is a guess, not a fact:
+    check on the console. Until then `curveNames` is `null`.
+- An agent should not assume either. If `frequenciesKnown` or `curveNamesKnown` is
+  false, it should say so to its user rather than guess.
+- Not described because not known: what Q means for a shelf, the slope of the filters,
+  and whether every curve is available on every band.
 
 ### Graphic EQ state
 
@@ -70,9 +140,8 @@ in the order they arrive, so a `set` followed by a `get` reads the result of the
 
 - `gains`: 32 bands in dB, lowest frequency first, each from -12 to 12.
 - `trim`: dB, -18 to 18. `in`: whether the graphic is switched in.
-- **To confirm: the frequency of each band.** The console's command set numbers the bands
-  1 to 32 and does not give their frequencies. Check band 1 and band 32 on the console's
-  graphic EQ display before relying on a frequency table.
+- The frequency of each band is in `geq.info`, once band 1 has been set in the proxy's
+  settings. The console's command set numbers the bands 1 to 32 without frequencies.
 
 ### Group EQ state
 
@@ -85,9 +154,9 @@ in the order they arrive, so a `set` followed by a `get` reads the result of the
 - `bands`: **eight** on Quantum 338, SD5, SD7 and SD10; **four** on SD8, SD9, SD11 and
   SD12. The list holds whatever the console has.
 - `freq` in Hz, 20 to 20000. `gain` in dB, -18 to 18. `q` from 0.1 to 20.
-- `curve`: the console's own number for the band's shape, passed through as it is.
-  **To confirm: what each number means** (bell, shelf and so on); read a group whose
-  shapes you know. Leave it out of a `set` to keep the shape.
+- `curve`: the console's own number for the band's shape, 1 to 4 (bands 5 to 8 also
+  accept 0). What each number means is in `group.eq.info` once entered in the proxy's
+  settings. Leave it out of a `set` to keep the shape.
 - `preInsert`: only on the consoles with eight bands. `filters`: only on those with four.
 - Not included: the dynamic EQ settings of bands 1 to 4. They are left as they are.
 
