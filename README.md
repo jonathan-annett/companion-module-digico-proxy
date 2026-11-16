@@ -15,7 +15,7 @@ console ◄── one link ──► proxy ├─ DiGiCo iPad app
                               └─ web page: live traffic, send a command, capture
 ```
 
-**Status: 0.1.3, a test build.** 45 automated tests against a simulated console,
+**Status: 0.1.4, a test build.** 45 automated tests against a simulated console,
 including two copies of the real recall module sharing one link. It has not yet been run
 against a console, the offline software or the iPad app. See [docs/TESTING.md](docs/TESTING.md).
 

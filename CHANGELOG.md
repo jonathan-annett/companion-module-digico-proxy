@@ -9,9 +9,9 @@ in [docs/TESTING.md](docs/TESTING.md) saying what was tested and on what.
 
 Nothing yet.
 
-## [0.1.3] - unreleased
+## [0.1.4] - unreleased
 
-Test builds are numbered as they are handed over. 0.1.0 to 0.1.2 were test builds and were never
+Test builds are numbered as they are handed over. 0.1.0 to 0.1.3 were test builds and were never
 published; this entry covers everything so far. Not yet run against a console, the
 offline software or the iPad app.
 
