@@ -7,7 +7,9 @@ in [docs/TESTING.md](docs/TESTING.md) saying what was tested and on what.
 
 ## [Unreleased]
 
-Nothing yet.
+- Setup advice: if the console is not answering, or after changing the connection's
+  settings, set Enable External Control to No and back to Yes. Found on the Quantum 338
+  offline software, which stopped answering after the module had been away for a while.
 
 ## [0.1.1] - unreleased
 

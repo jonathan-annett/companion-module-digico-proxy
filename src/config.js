@@ -53,7 +53,7 @@ export function getConfigFields(config = DEFAULTS, label = 'digico-proxy') {
 			'consoleNote',
 			'',
 			'Set Enable External Control to YES, add the row above, then press "load" next to "commands allowed" and ' +
-				'choose the iPad command set. Shown for the saved settings.',
+				'choose the iPad command set. Shown for the saved settings. If the console stops answering, or after changing these settings, set Enable External Control to NO and back to YES.',
 			12,
 		),
 		{

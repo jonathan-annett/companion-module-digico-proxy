@@ -18,6 +18,10 @@ commands.
 The settings page shows this row with the values to enter. On the DiGiCo offline software,
 allow the receive port (UDP, inbound) through Windows Firewall.
 
+**If the console is not answering**, set **Enable External Control** to No and back to
+Yes. The console can stop talking to a device that has been off or away for a while, and
+does not start again by itself. Do the same after changing this connection's settings.
+
 ### In each tool
 
 Wherever the tool asks for the console, give it the computer running Companion and the
