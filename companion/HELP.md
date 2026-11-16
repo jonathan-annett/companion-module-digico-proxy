@@ -20,7 +20,7 @@ allow the receive port (UDP, inbound) through Windows Firewall.
 
 **If the console is not answering**, set **Enable External Control** to No and back to
 Yes. The console can stop talking to a device that has been off or away for a while, and
-does not start again by itself. Do the same after changing this connection's settings.
+does not start again by itself; the DiGiCo iPad app is affected the same way. Do the same after changing this connection's settings.
 
 ### In each tool
 
