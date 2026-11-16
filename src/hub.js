@@ -265,10 +265,28 @@ export class Hub {
 		this.note('from console', asker ? asker.name : 'everyone', buf, messages)
 		if (asker) return this.deliver(asker, buf)
 		for (const client of this.clients.values()) this.deliver(client, buf)
+		for (const client of this.internal.values()) if (client.onPacket) this.deliver(client, buf)
+	}
+
+	/**
+	 * A client inside this process, with no network address: it is handed what the console
+	 * sends by a function call. Used by the EQ agent link.
+	 */
+	addInternal(key, name, onPacket) {
+		const client = this.newClient({ name, internal: true, onPacket })
+		this.internal.set(key, client)
+		return client
 	}
 
 	deliver(client, buf) {
-		if (client.internal || !this.clientSocket) return
+		if (client.internal) {
+			if (client.onPacket) {
+				client.toClient++
+				client.onPacket(buf)
+			}
+			return
+		}
+		if (!this.clientSocket) return
 		// An unlisted client that has never sent anything has nowhere to be answered
 		if (!client.fixed && !client.lastSeen) return
 		client.toClient++

@@ -7,6 +7,7 @@ export const DEFAULTS = {
 	clientPort: 8101,
 	fixedClients: '',
 	rate: 800,
+	agentUrl: '',
 }
 
 const port = (id, label, def) => ({ type: 'number', id, label, width: 6, min: 1, max: 65535, default: def })
@@ -87,6 +88,15 @@ export function getConfigFields(config = DEFAULTS, label = 'digico-proxy') {
 			label:
 				'Clients that must be answered on a set port, such as the iPad app: name=address:port, separated by commas ' +
 				'(for example iPad=192.168.1.20:9000). Other clients are answered wherever they send from.',
+			width: 12,
+			default: '',
+		},
+		{
+			type: 'textinput',
+			id: 'agentUrl',
+			label:
+				'EQ agent: WebSocket address of a server that may read and set graphic EQs and group EQs, for example ' +
+				'ws://192.168.1.30:8765. Tried once when this connection starts. Leave empty for none.',
 			width: 12,
 			default: '',
 		},

@@ -1,4 +1,5 @@
 import { Hub, parseFixedClients } from './hub.js'
+import { EqAgent } from './agent.js'
 import { DEFAULTS, getConfigFields } from './config.js'
 import { getActions } from './actions.js'
 import { getFeedbacks } from './feedbacks.js'
@@ -16,6 +17,7 @@ export function makeInstanceClass({ InstanceBase, InstanceStatus }) {
 			super(internal)
 			this.config = { ...DEFAULTS }
 			this.hub = null
+			this.agent = null
 			this.refreshTimer = null
 		}
 
@@ -85,10 +87,19 @@ export function makeInstanceClass({ InstanceBase, InstanceStatus }) {
 			} catch (err) {
 				this.updateStatus(InstanceStatus.UnknownError, String(err.message || err))
 			}
+			// The EQ agent link, if an address is set: one attempt now, more only when asked
+			this.agent = new EqAgent(this.hub, {
+				url: c.agentUrl,
+				log: (level, text) => this.log(level, text),
+				onChange: () => this.scheduleRefresh(),
+			})
+			this.agent.connect()
 			this.refresh()
 		}
 
 		async stopHub() {
+			this.agent?.close()
+			this.agent = null
 			await this.hub?.stop()
 			this.hub = null
 		}
@@ -103,7 +114,7 @@ export function makeInstanceClass({ InstanceBase, InstanceStatus }) {
 
 		refresh() {
 			if (!this.hub) return
-			this.setVariableValues(getVariableValues(this.hub))
+			this.setVariableValues(getVariableValues(this.hub, this.agent))
 			this.checkAllFeedbacks()
 		}
 	}

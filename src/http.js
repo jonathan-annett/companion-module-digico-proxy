@@ -24,7 +24,12 @@ export async function handleHttp(self, request) {
 		}
 		if (!hub) return json({ error: 'Module is not running' }, 503)
 		if (method === 'GET' && path === '/api/status') {
-			return json({ ...hub.status(), setup: consoleSetup(self.config), clientPort: Number(self.config.clientPort) })
+			return json({
+				...hub.status(),
+				setup: consoleSetup(self.config),
+				clientPort: Number(self.config.clientPort),
+				agent: self.agent?.status() ?? { url: '', state: 'off', detail: '', commands: 0 },
+			})
 		}
 		if (method === 'GET' && path === '/api/trace') {
 			const since = Number(request.query?.since) || 0
@@ -57,6 +62,9 @@ export async function handleHttp(self, request) {
 			case '/api/capture':
 				if (!hub.startCapture(Number(body.seconds) || 10)) throw new Error('A capture is already running')
 				return json({ ok: true })
+			case '/api/agent/connect':
+				self.agent?.connect()
+				return json({ agent: self.agent?.status() ?? null })
 			case '/api/trace/clear':
 				hub.clearTrace()
 				return json({ ok: true })

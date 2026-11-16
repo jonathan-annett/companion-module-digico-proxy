@@ -6,6 +6,7 @@ import dgram from 'node:dgram'
 import test from 'node:test'
 import { SimConsole } from './sim-console.mjs'
 import { makeInstanceClass } from '../src/instance.js'
+import { WebSocketServer } from 'ws'
 import { encode, decode } from '../src/osc.js'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -166,6 +167,40 @@ await test('a client port equal to the console port is refused with a clear stat
 	assert.equal((await http('GET', '/api/status')).status, 503)
 	await mod.configUpdated(config)
 	await until(() => mod.status[0] === 'ok', 'running again')
+})
+
+await test('EQ agent address in the settings: tried on start, shown in status, variable and feedback', async () => {
+	assert.equal(mod.vars.agent, 'off')
+	assert.equal((await http('GET', '/api/status')).data.agent.state, 'off')
+	const server = new WebSocketServer({ port: 23010 })
+	const hellos = []
+	server.on('connection', (socket) => socket.on('message', (data) => hellos.push(JSON.parse(data.toString()))))
+	await mod.configUpdated({ ...config, agentUrl: 'ws://127.0.0.1:23010' })
+	await until(() => hellos.length === 1 && mod.vars.agent === 'connected', 'connected on start')
+	assert.equal(hellos[0].protocol, 'digico-proxy-eq')
+	assert.equal(fb('agent_connected'), true)
+	assert.deepEqual((await http('GET', '/api/status')).data.agent, {
+		url: 'ws://127.0.0.1:23010',
+		state: 'connected',
+		detail: '',
+		commands: 0,
+	})
+
+	// The server goes away: not retried until asked, by the action or the web page
+	for (const socket of server.clients) socket.close()
+	await until(() => mod.vars.agent === 'closed', 'closed')
+	assert.equal(fb('agent_connected'), false)
+	await sleep(200)
+	assert.equal(hellos.length, 1)
+	await run('agent_connect')
+	await until(() => hellos.length === 2 && mod.vars.agent === 'connected', 'reconnected by the action')
+	for (const socket of server.clients) socket.close()
+	await until(() => mod.vars.agent === 'closed', 'closed again')
+	await http('POST', '/api/agent/connect', {})
+	await until(() => hellos.length === 3, 'reconnected from the web page')
+	await mod.configUpdated(config)
+	assert.equal(mod.vars.agent, 'off')
+	await new Promise((r) => server.close(r))
 })
 
 await test('stops cleanly', async () => {

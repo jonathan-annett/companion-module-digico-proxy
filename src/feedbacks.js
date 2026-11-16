@@ -13,6 +13,7 @@ export const FEEDBACK_STYLES = {
 	console_online: { bgcolor: COLORS.green, color: COLORS.white },
 	clients: { bgcolor: COLORS.green, color: COLORS.white },
 	capturing: { bgcolor: COLORS.red, color: COLORS.white },
+	agent_connected: { bgcolor: COLORS.green, color: COLORS.white },
 }
 
 /** @param {{hub: import('./hub.js').Hub | null}} self */
@@ -34,5 +35,11 @@ export function getFeedbacks(self) {
 			(o) => h().status().activeClients >= Number(o.count),
 		),
 		capturing: boolean('capturing', 'A traffic capture is running', [], () => h().capture),
+		agent_connected: boolean(
+			'agent_connected',
+			'The EQ agent link is connected',
+			[],
+			() => self.agent?.status().state === 'connected',
+		),
 	}
 }

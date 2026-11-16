@@ -11,6 +11,15 @@ export function getActions(self) {
 				h()?.startCapture(Number(action.options.seconds) || 10)
 			},
 		},
+		agent_connect: {
+			name: 'Connect to the EQ agent',
+			description:
+				'Tries the EQ agent address in the settings once more. It is only tried by itself when the connection starts.',
+			options: [],
+			callback: async () => {
+				self.agent?.connect()
+			},
+		},
 		clear_trace: {
 			name: 'Clear the live traffic view',
 			options: [],

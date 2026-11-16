@@ -40,6 +40,15 @@ recognised by its address alone.
 - A client that sends nothing for 30 seconds is dropped until it speaks again. Tools that
   poll the console, as the recall module does, stay connected. Listed clients never expire.
 
+### EQ agent
+
+Optional. Enter the WebSocket address of a server (for example `ws://192.168.1.30:8765`)
+in **EQ agent**. The connection tries it once when it starts; after that, only when you
+use the action "Connect to the EQ agent" or the button on the web page. Once connected,
+that server can list, read and set graphic EQs and group EQs. It can change the console,
+so only enter the address of software you trust to ask first. The commands are described
+in `docs/EQ-AGENT.md` in the module's repository.
+
 ### Web page
 
 Linked from the settings page: `/instance/<connection label>/` on Companion's address.
@@ -54,12 +63,14 @@ Linked from the settings page: `/instance/<connection label>/` on Companion's ad
 - Capture all traffic to a file (for a number of seconds; download it from the web page)
 - Clear the live traffic view
 - Send an OSC command to the console
+- Connect to the EQ agent
 
 ### Feedbacks
 
 - Console is answering
 - At least a number of clients are connected
 - A capture is running
+- The EQ agent link is connected
 
 ### Variables
 
@@ -67,6 +78,7 @@ Linked from the settings page: `/instance/<connection label>/` on Companion's ad
 - `online`: YES or NO
 - `clients`: number of connected clients
 - `client_names`: their names
+- `agent`: EQ agent link: off, connecting, connected, failed or closed
 
 ### Care
 

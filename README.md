@@ -15,7 +15,7 @@ console ◄── one link ──► proxy ├─ DiGiCo iPad app
                               └─ web page: live traffic, send a command, capture
 ```
 
-**Status: 0.1.0, a first test build.** 26 automated tests against a simulated console,
+**Status: 0.1.1, a test build.** 40 automated tests against a simulated console,
 including two copies of the real recall module sharing one link. It has not yet been run
 against a console, the offline software or the iPad app. See [docs/TESTING.md](docs/TESTING.md).
 
@@ -32,6 +32,9 @@ against a console, the offline software or the iPad app. See [docs/TESTING.md](d
 - **Captures.** Records every packet in both directions for a few seconds, for download as
   a JSON file: client, direction, timing, decoded messages and raw bytes.
 - **Sends commands.** From the web page, a Companion action, or the HTTP API.
+- **EQ agent link.** Optionally connects out to a WebSocket server (a speaker-tuning
+  agent, say) and lets it read and set graphic EQs and group EQs with a small JSON API.
+  See [docs/EQ-AGENT.md](docs/EQ-AGENT.md).
 
 ## The API
 
@@ -79,6 +82,7 @@ DIGICO_RECALL_DIR=../companion-module-digico-recall yarn test   # also tests the
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version
 - [docs/TESTING.md](docs/TESTING.md): every test, the manual plan, the test log and findings
 - [docs/DESIGN.md](docs/DESIGN.md): how it works and why
+- [docs/EQ-AGENT.md](docs/EQ-AGENT.md): the JSON API for an EQ agent
 - [RELEASING.md](RELEASING.md): how a version is cut
 
 MIT licensed. Not affiliated with or endorsed by DiGiCo.

@@ -9,11 +9,21 @@ in [docs/TESTING.md](docs/TESTING.md) saying what was tested and on what.
 
 Nothing yet.
 
-## [0.1.0] - unreleased
+## [0.1.1] - unreleased
 
-First test build. Not yet run against a console, the offline software or the iPad app.
+Test builds are numbered as they are handed over. 0.1.0 was a test build and was never
+published; this entry covers everything so far. Not yet run against a console, the
+offline software or the iPad app.
 
 ### Added
+
+- **EQ agent link.** An optional WebSocket address in the settings. The proxy connects to
+  it once on starting and then answers JSON commands from that server: list the graphic
+  EQs, read one, set one; list the groups, read a group's EQ, set it. A set is checked
+  whole before anything is sent, sends only the values that differ, and answers with the
+  state read back from the console. See [docs/EQ-AGENT.md](docs/EQ-AGENT.md).
+- Action "Connect to the EQ agent", feedback and variable for the link's state, and its
+  state on the web page.
 
 - Shares a console's single iPad-type link among any number of clients.
 - Answers to queries go only to the client that asked; everything else goes to all.

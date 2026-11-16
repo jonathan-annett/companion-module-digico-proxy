@@ -193,6 +193,24 @@ table.log .lamp { margin-right: 8px; }
 
 	// ---- clients --------------------------------------------------------------------
 
+	// The outgoing WebSocket to an EQ agent, if an address is set in the settings
+	function agentBox(a) {
+		if (!a || a.state === 'off') return null
+		var up = a.state === 'connected'
+		var words = { idle: 'Not tried yet', connecting: 'Connecting', connected: 'Connected', failed: 'Not connected', closed: 'Closed' }
+		return h('div', {},
+			h('h2', { style: 'margin-top:26px' }, 'EQ agent'),
+			h('p', { class: 'note', style: 'color:var(--text);font-size:14px' },
+				h('span', { class: 'lamp' + (up ? ' on' : '') }),
+				(words[a.state] || a.state) + (a.detail ? ': ' + a.detail : '') + '. ',
+				h('span', { class: 'k' }, a.url),
+				up ? ' has carried out ' + a.commands + (a.commands === 1 ? ' command.' : ' commands.') : ''),
+			h('p', { class: 'note' }, 'It can read and set graphic EQs and group EQs. Its traffic is shown on the Traffic tab as "EQ agent". The address is tried once when the connection starts.'),
+			up || a.state === 'connecting' ? null : h('button', { class: 'b', onclick: function () {
+				api('api/agent/connect', {}).then(loadStatus).catch(fail)
+			} }, 'Try to connect now'))
+	}
+
 	function viewClients() {
 		var st = S.status, su = st.setup
 		var here = su.ip || 'this computer'
@@ -210,6 +228,7 @@ table.log .lamp { margin-right: 8px; }
 						h('td', { class: 'k' }, c.toClient),
 						h('td', { class: 'k' }, c.queued))
 				}))) : h('div', { class: 'empty-state' }, 'Nothing is connected yet.'),
+			agentBox(st.agent),
 			h('h2', { style: 'margin-top:26px' }, 'Connecting a tool'),
 			h('p', { class: 'note', style: 'color:var(--text);font-size:14px' }, 'In the tool, wherever it asks for the console, enter this computer and the proxy\u2019s client port instead:'),
 			h('table', { class: 'log', style: 'max-width:560px' },

@@ -104,3 +104,29 @@ default rate is below the proxy's, so alone it is not slowed.
 - The SD-range command sets, checked the same day for the recall module, list more than
   channels: snapshots, session name, console presets and macro buttons. The Send tab is
   the way to try those.
+
+### 2026-11-17: EQ agent link, 0.1.1
+
+- The maintainer works with an agent that listens to a speaker, compares it with a
+  reference, asks the operator, and then wants to apply an EQ. Asked for: a WebSocket
+  address in the settings, tried once on start, over which that server can list, read
+  and set graphic EQs and group EQs, each read and set as a whole.
+- This is the one place the proxy knows what an address means. It is kept in `agent.js`,
+  apart from `hub.js`, and is itself just another client of the hub: its queries are
+  routed and paced like anyone's, and show in the traffic view as "EQ agent".
+- The proxy connects out, as asked, so the agent needs no knowledge of where Companion
+  is. One attempt, no retry timer: a tuning agent is run now and then, and a proxy that
+  kept knocking on a port would be noise. A manual retry is provided.
+- A set validates everything before sending anything, so a bad request cannot leave an
+  EQ half changed. It then reads, sends only differences, and reads back. The answer is
+  what the console has, not what was asked for, and names any value that did not take.
+  It cannot be all-or-nothing on the console: values go one at a time over UDP.
+- Limits (graphic gain 12 dB, trim 18 dB, EQ gain 18 dB, 20 Hz to 20 kHz, Q 0.1 to 20)
+  are the ranges in DiGiCo's command sets. Out-of-range values are refused, not clipped,
+  so the agent finds out.
+- Number types: each value is written with the type the console used when it was read.
+- Group EQ follows the console family without being told: bands and filters that do not
+  answer are left out of the state, and setting one is refused.
+- Left out: dynamic EQ settings, band frequencies for the graphic (not in the command
+  sets), the meaning of the curve numbers. No authentication on the link: the proxy
+  chooses whom it connects to, and `wss://` is accepted.

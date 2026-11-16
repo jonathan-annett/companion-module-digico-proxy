@@ -10,6 +10,7 @@ export class SimConsole {
 	constructor({ listenPort, replyPort, replyHost = '127.0.0.1' }) {
 		this.opts = { listenPort, replyPort, replyHost }
 		this.values = new Map()
+		this.counts = {} // section -> how many; empty means the console does not say
 		this.received = [] // value writes
 		this.queries = [] // addresses asked for
 		this.arrivals = [] // [time, address] of everything received, for rate tests
@@ -37,6 +38,11 @@ export class SimConsole {
 			const path = m.path.slice(0, -2)
 			this.queries.push(path)
 			if (path === '/Console/Name') return this.out(path, 's', ['SimQuantum'])
+			if (path === '/Console/Channels') {
+				// answered with one message per kind of channel
+				for (const [section, total] of Object.entries(this.counts)) this.out(`/Console/${section}`, 'i', [total])
+				return
+			}
 			const v = this.values.get(path)
 			if (v) this.out(path, v.t, v.a)
 			return
