@@ -131,3 +131,10 @@ default rate is below the proxy's, so alone it is not slowed.
 - Left out: dynamic EQ settings, band frequencies for the graphic (not in the command
   sets), the meaning of the curve numbers. No authentication on the link: the proxy
   chooses whom it connects to, and `wss://` is accepted.
+
+### 2026-11-17: newer version notice, 0.1.2
+
+- Same as in the recall module, and for the same reason: until the module is in
+  Companion's store, the web page checks this repository's GitHub releases from the
+  browser and offers the newest package. `src/update.js` is the same file in both, apart
+  from the repository name. To be removed when the module is accepted into the store.

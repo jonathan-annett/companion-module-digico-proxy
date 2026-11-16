@@ -89,6 +89,14 @@ Each test's title says what it proves. The lists are generated from the test fil
 | --- | ------------------------------------------------------ |
 | 1   | two Recall engines share one console through the proxy |
 
+### test/update.test.mjs: the newer-version notice
+
+| #   | Test                                                                               |
+| --- | ---------------------------------------------------------------------------------- |
+| 1   | offers the newest release that is newer than the running version and has a package |
+| 2   | ignores drafts, releases with no package, odd tags and odd answers                 |
+| 3   | the web page carries the same function, this version and this repository           |
+
 ## 2. Manual test plan
 
 To be run with the Quantum 338 offline software first, then on consoles. Record results
@@ -115,11 +123,12 @@ in the test log.
 
 ## 3. Test log
 
-| Date       | Version            | What was run                                                                                                                                           | On                                                                             | Result                                                                   |
-| ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| 2026-11-16 | 0.1.0 (test build) | Automated suite, 26 tests including the recall engine through the proxy; package build                                                                 | Node 22.23.4, Linux, simulated console                                         | 26 passed, 0 failed; package built                                       |
-| 2026-11-16 | 0.1.0 (test build) | Web page opened in headless Chrome against `tools/preview.mjs`: all four tabs, two pretend clients                                                     | Chrome, simulated console                                                      | No script errors; clients, routes and values shown correctly             |
-| 2026-11-17 | 0.1.1 (test build) | Automated suite, 40 tests, including the EQ agent link against a real WebSocket server; `tools/agent-example.mjs` run against the proxy; package build | Node 22.23.4, Linux, simulated consoles with eight-band and four-band group EQ | 40 passed, 0 failed; example printed the lists and states; package built |
+| Date       | Version            | What was run                                                                                                                                                                    | On                                                                             | Result                                                                                     |
+| ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| 2026-11-16 | 0.1.0 (test build) | Automated suite, 26 tests including the recall engine through the proxy; package build                                                                                          | Node 22.23.4, Linux, simulated console                                         | 26 passed, 0 failed; package built                                                         |
+| 2026-11-16 | 0.1.0 (test build) | Web page opened in headless Chrome against `tools/preview.mjs`: all four tabs, two pretend clients                                                                              | Chrome, simulated console                                                      | No script errors; clients, routes and values shown correctly                               |
+| 2026-11-17 | 0.1.1 (test build) | Automated suite, 40 tests, including the EQ agent link against a real WebSocket server; `tools/agent-example.mjs` run against the proxy; package build                          | Node 22.23.4, Linux, simulated consoles with eight-band and four-band group EQ | 40 passed, 0 failed; example printed the lists and states; package built                   |
+| 2026-11-17 | 0.1.2 (test build) | Automated suite, 43 tests; package build. The newer-version notice is the same code as the recall module's, which was checked in headless Chrome with GitHub's answer simulated | Node 22.23.4, Linux                                                            | 43 passed, 0 failed; package built. The notice was not opened in a browser for this module |
 
 ### Coverage on real equipment
 

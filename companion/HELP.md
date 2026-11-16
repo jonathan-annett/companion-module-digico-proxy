@@ -62,6 +62,10 @@ Linked from the settings page: `/instance/<connection label>/` on Companion's ad
 - **Send**: send one command to the console
 - **Setup**: the console's device row, filled in
 
+When a newer version of this module has been released, the web page shows a bar offering
+the package to download (it needs internet access on the device showing the page). Import
+it in Companion's Modules page and choose the new version on the connection.
+
 ### Actions
 
 - Capture all traffic to a file (for a number of seconds; download it from the web page)

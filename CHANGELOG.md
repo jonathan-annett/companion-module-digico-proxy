@@ -7,18 +7,25 @@ in [docs/TESTING.md](docs/TESTING.md) saying what was tested and on what.
 
 ## [Unreleased]
 
-- Setup advice: if the console is not answering, or after changing the connection's
-  settings, set Enable External Control to No and back to Yes. Found on the Quantum 338
-  offline software, which stopped answering after the module had been away for a while.
+Nothing yet.
 
-## [0.1.1] - unreleased
+## [0.1.2] - unreleased
 
-Test builds are numbered as they are handed over. 0.1.0 was a test build and was never
+Test builds are numbered as they are handed over. 0.1.0 and 0.1.1 were test builds and were never
 published; this entry covers everything so far. Not yet run against a console, the
 offline software or the iPad app.
 
 ### Added
 
+- **Newer version notice.** The web page looks at this module's releases on GitHub and,
+  when a newer one with a package attached exists, shows a bar with a link to download
+  it and to its notes. The check is made by the browser, at most every six hours, and
+  again on request from the Setup tab; with no internet it does nothing. Nothing is
+  installed: the package is imported into Companion as before. This is for the time
+  before the module is in Companion's store, which will then offer updates itself.
+- Setup advice: if the console is not answering, or after changing the connection's
+  settings, set Enable External Control to No and back to Yes. Found on the Quantum 338
+  offline software, which stopped answering after the module had been away for a while.
 - **EQ agent link.** An optional WebSocket address in the settings. The proxy connects to
   it once on starting and then answers JSON commands from that server: list the graphic
   EQs, read one, set one; list the groups, read a group's EQ, set it. A set is checked

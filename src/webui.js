@@ -5,6 +5,8 @@
 // screenshot, placed in the stylesheet.
 
 import { SETUP_IMAGE } from './setup-image.js'
+import { updateScript } from './update.js'
+import { VERSION } from './version.js'
 
 export const PAGE = String.raw`<!doctype html>
 <html lang="en">
@@ -151,6 +153,7 @@ table.log .lamp { margin-right: 8px; }
 	function clone(x) { return JSON.parse(JSON.stringify(x)) }
 
 	var toastTimer
+${updateScript(VERSION)}
 	function toast(text, bad) {
 		var t = $('toast')
 		t.textContent = text
@@ -403,6 +406,7 @@ table.log .lamp { margin-right: 8px; }
 						.then(render).catch(fail)
 				} }, saved ? 'The proxy is using this console address' : 'Use this console address in the proxy')),
 			su && su.otherIps.length && su.ipMatched ? h('p', { class: 'note' }, 'This computer’s other addresses: ' + su.otherIps.join(', ') + '.') : null,
+			updateLine(),
 			h('p', { class: 'note' }, 'If the console is not answering, or you have just changed the settings here, set Enable External Control to NO and back to YES on the console: it can stop talking to a device that has been away for a while. Leave "OSC generic" off; this module does not use it. If the console is the DiGiCo offline software on a Windows PC, allow inbound UDP port ' + st.setup.rcv + ' through Windows Firewall, and check that this computer’s own firewall allows incoming connections for Companion.'))
 	}
 
