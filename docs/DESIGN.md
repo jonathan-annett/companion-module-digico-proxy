@@ -79,6 +79,7 @@ default rate is below the proxy's, so alone it is not slowed.
 | File                                                                                        | Does                                                                                                  |
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `src/hub.js`                                                                                | The proxy: sockets, clients, routing, pacing, trace, capture, injector. No Companion code             |
+| `src/agent.js`                                                                              | The EQ agent link: WebSocket out, JSON commands in, graphic and group EQ. A client of the hub         |
 | `src/instance.js`                                                                           | The Companion class: settings in, status out                                                          |
 | `src/http.js`, `src/webui.js`                                                               | HTTP API and the single-file web page                                                                 |
 | `src/config.js`, `src/actions.js`, `src/feedbacks.js`, `src/variables.js`, `src/presets.js` | Companion definitions                                                                                 |
