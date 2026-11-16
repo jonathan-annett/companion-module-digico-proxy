@@ -8,6 +8,8 @@ export const DEFAULTS = {
 	fixedClients: '',
 	rate: 800,
 	agentUrl: '',
+	agentGeqFirstBand: '',
+	agentCurveNames: '',
 }
 
 const port = (id, label, def) => ({ type: 'number', id, label, width: 6, min: 1, max: 65535, default: def })
@@ -98,6 +100,25 @@ export function getConfigFields(config = DEFAULTS, label = 'digico-proxy') {
 				'EQ agent: WebSocket address of a server that may read and set graphic EQs and group EQs, for example ' +
 				'ws://192.168.1.30:8765. Tried once when this connection starts. Leave empty for none.',
 			width: 12,
+			default: '',
+		},
+		{
+			type: 'dropdown',
+			id: 'agentGeqFirstBand',
+			label: 'EQ agent: frequency of graphic EQ band 1 (look at the console; it is not reported)',
+			width: 6,
+			default: '',
+			choices: [
+				{ id: '', label: 'Not known' },
+				{ id: '16', label: '16 Hz (bands run 16 Hz to 20 kHz)' },
+				{ id: '20', label: '20 Hz (bands run 20 Hz to 25 kHz)' },
+			],
+		},
+		{
+			type: 'textinput',
+			id: 'agentCurveNames',
+			label: 'EQ agent: what the EQ curve numbers 1 to 4 mean on this console, for example 1=bell, 2=low shelf',
+			width: 6,
 			default: '',
 		},
 	]

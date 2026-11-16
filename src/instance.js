@@ -90,6 +90,8 @@ export function makeInstanceClass({ InstanceBase, InstanceStatus }) {
 			// The EQ agent link, if an address is set: one attempt now, more only when asked
 			this.agent = new EqAgent(this.hub, {
 				url: c.agentUrl,
+				geqFirstBand: c.agentGeqFirstBand,
+				curveNames: c.agentCurveNames,
 				log: (level, text) => this.log(level, text),
 				onChange: () => this.scheduleRefresh(),
 			})

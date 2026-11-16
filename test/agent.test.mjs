@@ -6,7 +6,7 @@ import test from 'node:test'
 import { WebSocketServer } from 'ws'
 import { SimConsole } from './sim-console.mjs'
 import { Hub } from '../src/hub.js'
-import { EqAgent, GEQ_BANDS, PROTOCOL } from '../src/agent.js'
+import { EqAgent, GEQ_BANDS, PROTOCOL, parseCurveNames } from '../src/agent.js'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 async function until(check, what, ms = 4000) {
@@ -52,7 +52,7 @@ function fill(sim, { geqs = 3, groups = 2, family = 'large', counts = true } = {
 }
 
 /** A console, a proxy, a WebSocket server playing the agent, and the link between them. */
-async function rig(t, fillOpts = {}) {
+async function rig(t, fillOpts = {}, agentOpts = {}) {
 	const consolePort = nextPort++
 	const hubPort = nextPort++
 	const clientPort = nextPort++
@@ -74,6 +74,7 @@ async function rig(t, fillOpts = {}) {
 		url: `ws://127.0.0.1:${wsPort}`,
 		queryTimeout: 150,
 		settle: 40,
+		...agentOpts,
 		log: (l, text) => logs.push(text),
 	})
 	t.after(async () => {
@@ -107,9 +108,11 @@ test('on connecting, the proxy introduces itself and lists its commands', async 
 	assert.deepEqual(hello.commands, [
 		'ping',
 		'geq.list',
+		'geq.info',
 		'geq.get',
 		'geq.set',
 		'group.list',
+		'group.eq.info',
 		'group.eq.get',
 		'group.eq.set',
 	])
@@ -265,6 +268,82 @@ test('group EQ on a compact console: four bands and bus filters; what it lacks i
 		assert.match(refused.error, pattern)
 	}
 	assert.equal(sim.received.length, 0, 'a refused request sends nothing, even its valid parts')
+})
+
+test('limits and characteristics: what the agent can ask before it recommends anything', async (t) => {
+	const { ask, connect } = await rig(t, { family: 'large' })
+	await connect()
+	const geq = (await ask('geq.info')).result
+	assert.deepEqual(
+		[geq.bands, geq.gain, geq.trim, geq.spacing],
+		[32, { min: -12, max: 12, unit: 'dB' }, { min: -18, max: 18, unit: 'dB' }, 'third octave'],
+	)
+	assert.deepEqual(
+		[geq.frequencies, geq.frequenciesKnown],
+		[null, false],
+		'not invented when the user has not said where band 1 is',
+	)
+
+	const eq = (await ask('group.eq.info', { index: 2 })).result
+	assert.equal(eq.bands.length, 8)
+	assert.deepEqual(eq.bands[0], {
+		band: 1,
+		freq: { min: 20, max: 20000, unit: 'Hz' },
+		gain: { min: -18, max: 18, unit: 'dB' },
+		q: { min: 0.1, max: 20, unit: 'Q' },
+		curve: { min: 1, max: 4 },
+	})
+	assert.deepEqual(eq.bands[7].curve, { min: 0, max: 4 })
+	assert.deepEqual([eq.curveNames, eq.curveNamesKnown, eq.preInsertSwitch, eq.filters], [null, false, true, null])
+	assert.equal((await ask('group.eq.info')).result.bands.length, 8, 'the first group is described when none is named')
+	// What it reports as the limits are the limits it enforces
+	assert.match(
+		(await ask('group.eq.set', { index: 2, state: { bands: [{ band: 1, curve: 0 }] } })).error,
+		/between 1 and 4/,
+	)
+	assert.match(
+		(await ask('group.eq.set', { index: 2, state: { bands: [{ band: 1, curve: 5 }] } })).error,
+		/between 1 and 4/,
+	)
+	assert.match(
+		(await ask('group.eq.set', { index: 2, state: { bands: [{ band: 2, curve: 2.5 }] } })).error,
+		/whole number/,
+	)
+	assert.equal((await ask('group.eq.set', { index: 2, state: { bands: [{ band: 6, curve: 0 }] } })).ok, true)
+})
+
+test('limits on a compact console, and what the user has told the proxy about band frequencies and curves', async (t) => {
+	const { hub, ask, connect } = await rig(
+		t,
+		{ family: 'compact' },
+		{ geqFirstBand: '20', curveNames: '1=bell, 2 = low shelf; 3:high shelf, x=junk, 4=notch' },
+	)
+	await connect()
+	const geq = (await ask('geq.info')).result
+	assert.equal(geq.frequenciesKnown, true)
+	assert.equal(geq.frequencies.length, 32)
+	assert.deepEqual(
+		[geq.frequencies[0], geq.frequencies[3], geq.frequencies[17], geq.frequencies[31]],
+		[20, 40, 1000, 25000],
+	)
+	const eq = (await ask('group.eq.info', { index: 1 })).result
+	assert.deepEqual(
+		eq.bands.map((b) => b.band),
+		[1, 2, 3, 4],
+	)
+	assert.deepEqual(eq.curveNames, { 1: 'bell', 2: 'low shelf', 3: 'high shelf', 4: 'notch' })
+	assert.deepEqual([eq.curveNamesKnown, eq.preInsertSwitch], [true, false])
+	assert.deepEqual(eq.filters, {
+		hi: { freq: { min: 20, max: 20000, unit: 'Hz' } },
+		lo: { freq: { min: 20, max: 20000, unit: 'Hz' } },
+	})
+	assert.deepEqual(eq.notExposed, ['dynamic EQ settings of bands 1 to 4', 'symmetric Q switch'])
+
+	const from16 = new EqAgent(hub, { geqFirstBand: 16 }).geqInfo().frequencies
+	assert.deepEqual([from16[0], from16[31]], [16, 20000])
+	assert.equal(new EqAgent(hub, { geqFirstBand: '31.5' }).geqInfo().frequencies, null, 'only 16 or 20 is accepted')
+	assert.equal(parseCurveNames(''), null)
+	assert.equal(parseCurveNames('bell, shelf'), null)
 })
 
 test('a value the console does not take is reported, not hidden', async (t) => {

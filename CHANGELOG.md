@@ -9,14 +9,22 @@ in [docs/TESTING.md](docs/TESTING.md) saying what was tested and on what.
 
 Nothing yet.
 
-## [0.1.2] - unreleased
+## [0.1.3] - unreleased
 
-Test builds are numbered as they are handed over. 0.1.0 and 0.1.1 were test builds and were never
+Test builds are numbered as they are handed over. 0.1.0 to 0.1.2 were test builds and were never
 published; this entry covers everything so far. Not yet run against a console, the
 offline software or the iPad app.
 
 ### Added
 
+- **EQ agent: limits and characteristics.** Two new commands, `geq.info` and
+  `group.eq.info`, tell the agent what it has to work with before it recommends anything:
+  how many bands, and the range of every gain, frequency, Q and curve number; whether the
+  group EQ has a pre-insert switch or separate filters. Two things the console does not
+  report can be supplied in the settings and are then included: where graphic EQ band 1
+  sits (16 or 20 Hz, giving the 32 band frequencies) and what the curve numbers 1 to 4
+  mean. Until supplied they are reported as not known rather than guessed. Curve numbers
+  are now checked against their range when set.
 - **Newer version notice.** The web page looks at this module's releases on GitHub and,
   when a newer one with a package attached exists, shows a bar with a link to download
   it and to its notes. The check is made by the browser, at most every six hours, and

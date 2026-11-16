@@ -27,6 +27,25 @@ export const LIMITS = {
 	q: [0.1, 20],
 }
 
+// ISO nominal third-octave centre frequencies. A 32-band graphic is 32 consecutive ones;
+// which 32 depends on where band 1 sits, which the command sets do not say.
+const THIRD_OCTAVES = [
+	16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500,
+	3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000, 25000,
+]
+
+/** "1=bell, 2=low shelf" as { 1: 'bell', 2: 'low shelf' }; null when nothing usable is given. */
+export function parseCurveNames(text) {
+	const out = {}
+	for (const part of String(text ?? '').split(/[,;\n]+/)) {
+		const m = /^\s*(\d)\s*[=:]\s*(.+?)\s*$/.exec(part)
+		if (m) out[Number(m[1])] = m[2].slice(0, 40)
+	}
+	return Object.keys(out).length ? out : null
+}
+
+const range = ([min, max], unit) => ({ min, max, unit })
+
 const BAND_FIELDS = { on: 'eq_on', freq: 'eq_freq', gain: 'eq_gain', q: 'eq_Q', curve: 'eq_curve' }
 const SWITCHES = new Set(['on', 'in', 'preInsert'])
 const FILTER_FIELDS = {
@@ -52,6 +71,9 @@ export class EqAgent {
 		this.hub = hub
 		this.opts = { queryTimeout: 500, settle: 150, WebSocketImpl: globalThis.WebSocket, ...opts }
 		this.url = String(opts.url ?? '').trim()
+		// What the console does not report and the user can supply in the settings
+		this.geqFirstBand = THIRD_OCTAVES.slice(0, 2).includes(Number(opts.geqFirstBand)) ? Number(opts.geqFirstBand) : null
+		this.curveNames = parseCurveNames(opts.curveNames)
 		this.state = this.url ? 'idle' : 'off' // off | idle | connecting | connected | failed | closed
 		this.detail = ''
 		this.commands = 0
@@ -172,9 +194,11 @@ export class EqAgent {
 	handlers = {
 		ping: async () => ({ console: this.hub.consoleName, consoleOnline: this.hub.online }),
 		'geq.list': async () => ({ graphicEqs: await this.list('geq') }),
+		'geq.info': async () => this.geqInfo(),
 		'geq.get': async (r) => (await this.readGeq(await this.index(r, 'geq'))).state,
 		'geq.set': async (r) => this.writeGeq(await this.index(r, 'geq'), r.state),
 		'group.list': async () => ({ groups: await this.list('group') }),
+		'group.eq.info': async (r) => this.groupEqInfo(r.index === undefined ? 1 : await this.index(r, 'group')),
 		'group.eq.get': async (r) => (await this.readGroupEq(await this.index(r, 'group'))).state,
 		'group.eq.set': async (r) => this.writeGroupEq(await this.index(r, 'group'), r.state),
 	}
@@ -279,6 +303,54 @@ export class EqAgent {
 		return { state: after.state, sent, ...(notApplied.length ? { notApplied } : {}) }
 	}
 
+	// ---- limits and characteristics ----------------------------------------------------
+
+	/** What a graphic EQ is: how many bands, how far each goes, and where the bands are if known. */
+	geqInfo() {
+		const first = this.geqFirstBand
+		const start = first === null ? -1 : THIRD_OCTAVES.indexOf(first)
+		return {
+			bands: GEQ_BANDS,
+			gain: range(LIMITS.geqGain, 'dB'),
+			trim: range(LIMITS.geqTrim, 'dB'),
+			spacing: 'third octave',
+			// null until the user has said in the settings where band 1 is: the console does not report it
+			frequencies: first === null ? null : THIRD_OCTAVES.slice(start, start + GEQ_BANDS),
+			frequenciesKnown: first !== null,
+			source:
+				'Ranges are those in DiGiCo’s iPad command sets. Band frequencies are ISO third-octave centres counted from the first band set in the proxy’s settings.',
+		}
+	}
+
+	/**
+	 * What a group's parametric EQ is on this console: the bands it has and the range of
+	 * every setting. The band count and the presence of filters are read from the console;
+	 * the ranges are those in DiGiCo's command sets.
+	 */
+	async groupEqInfo(index) {
+		const { state } = await this.readGroupEq(index)
+		return {
+			bands: state.bands.map((b) => ({
+				band: b.band,
+				freq: range(LIMITS.freq, 'Hz'),
+				gain: range(LIMITS.gain, 'dB'),
+				q: range(LIMITS.q, 'Q'),
+				curve: { min: curveMin(b.band), max: CURVE_MAX },
+			})),
+			// What each curve number means (bell, shelf and so on), if the user has said: the console does not report it
+			curveNames: this.curveNames,
+			curveNamesKnown: !!this.curveNames,
+			preInsertSwitch: state.preInsert !== undefined,
+			filters:
+				state.filters === undefined
+					? null
+					: { hi: { freq: range(LIMITS.freq, 'Hz') }, lo: { freq: range(LIMITS.freq, 'Hz') } },
+			notExposed: ['dynamic EQ settings of bands 1 to 4', 'symmetric Q switch'],
+			source:
+				'Band count and filters read from this console; ranges are those in DiGiCo’s iPad command sets. Curve names come from the proxy’s settings.',
+		}
+	}
+
 	// ---- graphic EQ ------------------------------------------------------------------
 
 	async readGeq(index) {
@@ -369,7 +441,6 @@ export class EqAgent {
 		const add = (field, suffix, value) => changes.push({ field, path: base + suffix, value })
 		const check = (field, label, v) => {
 			if (SWITCHES.has(field)) return bool(v, label)
-			if (field === 'curve') return number(v, label, [0, 99], true)
 			return number(v, label, LIMITS[field])
 		}
 		for (const key of Object.keys(wanted)) {
@@ -388,7 +459,11 @@ export class EqAgent {
 						if (field === 'band') continue
 						if (!BAND_FIELDS[field]) fail(`Unknown field "${field}" in band ${band}`)
 						const label = `bands[${band}].${field}`
-						add(label, `EQ/${BAND_FIELDS[field]}_${band}`, check(field, label, entry[field]))
+						const value =
+							field === 'curve'
+								? number(entry.curve, label, [curveMin(band), CURVE_MAX], true)
+								: check(field, label, entry[field])
+						add(label, `EQ/${BAND_FIELDS[field]}_${band}`, value)
 					}
 				}
 			} else if (key === 'filters') {
@@ -410,6 +485,10 @@ export class EqAgent {
 		return this.apply(() => this.readGroupEq(index), changes)
 	}
 }
+
+// The band's shape is a number from 1 to 4 in the command sets; bands 5 to 8 also list 0
+const CURVE_MAX = 4
+const curveMin = (band) => (band > 4 ? 0 : 1)
 
 function number(v, label, [min, max], whole = false) {
 	if (typeof v !== 'number' || !Number.isFinite(v)) fail(`"${label}" must be a number`)
